@@ -16,7 +16,7 @@ A REST API built with Django and Django REST Framework.
 
 ## Setup
 ```bash
-git clone https://github.com/yourusername/blog-platform-api.git
+git clone  https://github.com/lfgSammy/Blogplatform.git
 cd blog-platform-api
 pip install -r requirements.txt
 python manage.py migrate
