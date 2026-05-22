@@ -43,7 +43,7 @@ class RegisterView(APIView):
             return Response({'error':'Invalid email format'},
                             status=status.HTTP_400_BAD_REQUEST)
         
-        password_errors = validate_password
+        password_errors = validate_password(password)
         if password_errors:
             return Response({'error':password_errors},
                             status=status.HTTP_400_BAD_REQUEST)
