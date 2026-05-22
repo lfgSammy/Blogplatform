@@ -4,9 +4,30 @@ from rest_framework import status
 from .models import Post, Comment, Like
 from .serializers import PostSerializer, CommentSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+import re
+
+
+
+def validate_email(email):
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email)
+
+
+def validate_password(password):
+    errors = []
+    if len(password) < 8:
+        errors.append('Password must at least be 8 characters')
+    if not re.search(r'[A-Z]', password):
+        errors.append('Password must contain at least one uppercase letter')
+    if not re.search(r'[a-z]', password):
+        errors.append('Password must contain at least one lowercase letter')
+    if not re.search(r'[0-9]', password):
+        errors.append('Password must contain at least one number')
+    return errors
+
 
 
 class RegisterView(APIView):
@@ -15,18 +36,37 @@ class RegisterView(APIView):
         username = request.data.get('username')
         password = request.data.get('password')
         if not email or not username or not password:
-            return Response({'error': "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': "All fields are required"}, 
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        if not validate_email(email):
+            return Response({'error':'Invalid email format'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        password_errors = validate_password
+        if password_errors:
+            return Response({'error':password_errors},
+                            status=status.HTTP_400_BAD_REQUEST)
         
         if User.objects.filter(username=username).exists():
-            return Response({'error': "Username already exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': "Username already exist"},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        if User.objects.filter(email= email).exists():
+            return Response({'error':'Email already existed'},
+                            status=status.HTTP_400_BAD_REQUEST)
         
         user = User.objects.create_user(
             username= username,
             password= password,
             email= email
         )
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key}, status= status.HTTP_201_CREATED)
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'access':str(refresh.access_token),
+            'refresh':str(refresh)
+        }, status=status.HTTP_201_CREATED)
+
 
 class LoginView(APIView):
     def post(self, request):
@@ -34,9 +74,15 @@ class LoginView(APIView):
         password = request.data.get('password')
         user = authenticate(username=username, password=password)
         if user:
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key})
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'access':str(refresh.access_token),
+                'refresh':str(refresh)
+            })
+        return Response({'error':'Invalid Credentials'},
+                        status=status.HTTP_401_UNAUTHORIZED)
+
+
 
 class PostListView(APIView):
     def get_permissions(self):
