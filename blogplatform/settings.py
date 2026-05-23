@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'users',
     'posts',
-    'cors-headers',
+    'corsheaders',
 ]
 
 REST_FRAMEWORK = {
@@ -88,7 +88,6 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
-
 
 ROOT_URLCONF = 'blogplatform.urls'
 
