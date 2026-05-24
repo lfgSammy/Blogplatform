@@ -2,39 +2,77 @@
 
 A REST API built with Django and Django REST Framework.
 
-## Features
-- Token based authentication
-- Post CRUD with author only permissions
-- Nested comments with reply support
-- Like/Unlike system with duplicate prevention
+Base URL: https://your-app.railway.app/api
 
-## Tech Stack
-- Python
-- Django
-- Django REST Framework
-- SQLite
+## Authentication
+This API uses JWT authentication.
+Include the access token in every request header:
+Authorization: Bearer <access_token>
 
-## Setup
-```bash
-git clone  https://github.com/lfgSammy/Blogplatform.git
-cd blog-platform-api
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
+## Endpoints
 
-## API Endpoints
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | /api/auth/register/ | Register new user | No |
-| POST | /api/auth/login/ | Login and get token | No |
-| GET | /api/posts/ | Get all posts | No |
-| POST | /api/posts/ | Create a post | Yes |
-| GET | /api/posts/{id}/ | Get single post | No |
-| PUT | /api/posts/{id}/ | Update post | Author only |
-| DELETE | /api/posts/{id}/ | Delete post | Author only |
-| GET | /api/posts/{id}/comments/ | Get comments | No |
-| POST | /api/posts/{id}/comments/ | Add comment | Yes |
-| DELETE | /api/posts/{id}/comments/{id}/ | Delete comment | Author only |
-| POST | /api/posts/{id}/like/ | Like a post | Yes |
-| DELETE | /api/posts/{id}/like/ | Unlike a post | Yes |
+### Auth
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | /auth/register/ | Register new user | No |
+| POST | /auth/login/ | Login, get tokens | No |
+| POST | /auth/refresh/ | Refresh access token | No |
+
+### Posts
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | /posts/ | Get all posts | No |
+| POST | /posts/ | Create a post | Yes |
+| GET | /posts/{id}/ | Get single post | No |
+| PUT | /posts/{id}/ | Update post | Yes (author only) |
+| DELETE | /posts/{id}/ | Delete post | Yes (author only) |
+
+### Comments
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | /posts/{id}/comments/ | Get comments | No |
+| POST | /posts/{id}/comments/ | Add comment | Yes |
+| DELETE | /posts/{id}/comments/{id}/ | Delete comment | Yes (author only) |
+
+### Likes
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | /posts/{id}/like/ | Like a post | Yes |
+| DELETE | /posts/{id}/like/ | Unlike a post | Yes |
+
+## Request/Response Examples
+
+### Register
+Request:
+{
+    "username": "john",
+    "email": "john@test.com",
+    "password": "Test@1234"
+}
+
+Response:
+{
+    "access": "eyJ...",
+    "refresh": "eyJ..."
+}
+
+### Create Post
+Request:
+{
+    "title": "My First Post",
+    "body": "Post content here",
+    "status": "published"
+}
+
+Response:
+{
+    "id": 1,
+    "title": "My First Post",
+    "body": "Post content here",
+    "status": "published",
+    "author": {
+        "id": 1,
+        "username": "john"
+    },
+    "created_at": "2026-05-07T10:00:00Z"
+}
