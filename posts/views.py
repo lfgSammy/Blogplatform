@@ -117,13 +117,16 @@ class PostDetailView(APIView):
             return Post.objects.get(pk=pk)
         except Post.DoesNotExist:
             return None
-        
+    
+    @extend_schema(responses=PostSerializer)
     def get(self, request, pk):
         post = self.get_object(pk)
         if not post:
             return Response({'error': 'Post not found'}, status= status.HTTP_404_NOT_FOUND)
         serializer = PostSerializer(post)
         return Response(serializer.data)
+    
+    @extend_schema(request=PostSerializer)
     def put(self, request, pk):
         post = self.get_object(pk)
         if not post:
@@ -135,6 +138,8 @@ class PostDetailView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @extend_schema(responses={204: None})
     def delete(self, request, pk):
         post = self.get_object(pk)
         if not post:
@@ -150,10 +155,14 @@ class CommentListView(APIView):
         if self.request.method == 'GET':
             return [AllowAny()]
         return [IsAuthenticated()]
+     
+     @extend_schema(responses=CommentSerializer)
      def get(self, request, pk):
          comments = Comment.objects.filter(post_id = pk)
          serializers = CommentSerializer(comments, many=True)
          return Response(serializers.data)
+     
+     @extend_schema(request=CommentSerializer)
      def post(self, request, pk):
          serializers =CommentSerializer(data = request.data)
          if serializers.is_valid():
@@ -180,6 +189,8 @@ class CommentDetailView(APIView):
 
 class LikeView(APIView):
     permission_classes = [IsAuthenticated]
+
+    @extend_schema(responses={201: None})
     def post(self, request, pk):
         try:
             post = Post.objects.get(pk=pk)
@@ -189,6 +200,8 @@ class LikeView(APIView):
             return Response({"error": "You already liked this post"}, status=status.HTTP_400_BAD_REQUEST)
         Like.objects.create(user= request.user, post=post)
         return Response({"Message": "Post Liked"}, status=status.HTTP_201_CREATED)
+    
+    @extend_schema(responses={204: None})
     def delete(self, request, pk):
         try:
             post = Post.objects.get(pk=pk)

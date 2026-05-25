@@ -29,8 +29,8 @@ class CommentSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     username = serializers.CharField()
     email = serializers.CharField()
-    password = serializers.CharField()
+    password = serializers.CharField(write_only= True)
 
 class LoginSerializer(serializers.ModelSerializer):
     username = serializers.CharField()
-    password = serializers.CharField()
+    password = serializers.CharField(write_only= True)
