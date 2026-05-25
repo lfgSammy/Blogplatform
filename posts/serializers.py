@@ -26,3 +26,11 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ['id', 'author', 'post', 'content', 'created_at']
         read_only_fields = ["post"]
 
+class RegisterSerializer(serializers.ModelSerializer):
+    username = serializers.CharField()
+    email = serializers.CharField()
+    password = serializers.CharField()
+
+class LoginSerializer(serializers.ModelSerializer):
+    username = serializers.CharField()
+    password = serializers.CharField()

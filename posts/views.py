@@ -2,12 +2,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Post, Comment, Like
-from .serializers import PostSerializer, CommentSerializer
+from .serializers import PostSerializer, CommentSerializer,RegisterSerializer, LoginSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 import re
+from drf_spectacular.utils import extend_schema
 
 
 
@@ -31,6 +32,7 @@ def validate_password(password):
 
 
 class RegisterView(APIView):
+    @extend_schema(request=RegisterSerializer, responses={201:None})
     def post(self, request):
         email = request.data.get('email')
         username = request.data.get('username')
@@ -69,6 +71,7 @@ class RegisterView(APIView):
 
 
 class LoginView(APIView):
+    @extend_schema(request=LoginSerializer)
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
@@ -85,6 +88,7 @@ class LoginView(APIView):
 
 
 class PostListView(APIView):
+    @extend_schema(responses=PostSerializer)
     def get_permissions(self):
         if self.request.method == 'GET':
             return [AllowAny()]
@@ -94,7 +98,8 @@ class PostListView(APIView):
         posts = Post.objects.all()
         serializers = PostSerializer(posts, many=True)
         return Response(serializers.data)
-    
+
+    @extend_schema(request=PostSerializer)
     def post(self, request):
         serializers = PostSerializer(data= request.data)
         if serializers.is_valid():
