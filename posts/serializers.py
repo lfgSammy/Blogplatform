@@ -1,23 +1,23 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Post, Comment, Tag
+from .models import Post, Comment, Category
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email']
 
-class TagSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Tag
+        model = Category
         fields = ['id', 'name', 'slug']
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only= True)
-    tags = TagSerializer(many=True, read_only= True)
+    category = CategorySerializer(many=True, read_only= True)
     class Meta:
         model = Post
-        fields = ['id','title', 'body', 'created_at', 'status', 'updated_at', 'author', 'tags']
+        fields = ['id','title', 'body', 'created_at', 'status', 'updated_at', 'author', 'category']
 
 class CommentSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only= True)

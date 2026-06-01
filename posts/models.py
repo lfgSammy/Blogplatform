@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-class Tag(models.Model):
+class Category(models.Model):
     name = models.CharField(max_length = 50)
     slug = models.SlugField(unique = True)
 
@@ -21,7 +21,7 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add = True)
     updated_at = models.DateTimeField(auto_now= True)
     author = models.ForeignKey(User, on_delete = models.CASCADE)
-    tags = models.ManyToManyField(Tag, blank = True)
+    category = models.ManyToManyField(Category, blank = True)
 
     def __str__(self):
         return self.title
