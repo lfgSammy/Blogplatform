@@ -22,6 +22,7 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now= True)
     author = models.ForeignKey(User, on_delete = models.CASCADE)
     category = models.ManyToManyField(Category, blank = True)
+    thumbnail = models.ImageField(upload_to='post_thumbnail/', blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -47,4 +48,14 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.user.username} likes {self.post.title}"
+    
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    profile_picture = models.ImageField(upload_to='profile_picture/', blank=True, null=True)
+    bio = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.username}'s profile"
+    
     
