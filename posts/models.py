@@ -52,7 +52,7 @@ class Like(models.Model):
     
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    profile_picture = models.ImageField(upload_to='profile_picture/', blank=True, null=True)
+    profile_picture = CloudinaryField('profile_picture', blank=True, null=True)
     bio = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
