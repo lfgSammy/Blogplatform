@@ -2,7 +2,8 @@
 
 A REST API built with Django and Django REST Framework.
 
-Base URL: https://your-app.railway.app/api
+BASE URL: https://your-app.railway.app/api
+DOCUMENTATION URL: https://your-app.railway.app/api/docs
 
 ## Authentication
 This API uses JWT authentication.
