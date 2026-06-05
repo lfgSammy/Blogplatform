@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from cloudinary.models import CloudinaryField
 
 
 class Category(models.Model):
@@ -22,7 +23,7 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now= True)
     author = models.ForeignKey(User, on_delete = models.CASCADE)
     category = models.ManyToManyField(Category, blank = True)
-    thumbnail = models.ImageField(upload_to='post_thumbnail/', blank=True, null=True)
+    thumbnail = CloudinaryField('post_thumbnail',blank=True, null=True)
 
     def __str__(self):
         return self.title
