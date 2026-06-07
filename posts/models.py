@@ -1,14 +1,36 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.text import slugify
 from cloudinary.models import CloudinaryField
 
 
 class Category(models.Model):
     name = models.CharField(max_length = 50)
     slug = models.SlugField(unique = True)
+    description = models.TextField(blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='categories')
+    created_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
+
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
 
 class Post(models.Model):
     STATUS_CHOICES = [
@@ -21,8 +43,10 @@ class Post(models.Model):
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='draft')
     created_at = models.DateTimeField(auto_now_add = True)
     updated_at = models.DateTimeField(auto_now= True)
-    author = models.ForeignKey(User, on_delete = models.CASCADE)
-    category = models.ManyToManyField(Category, blank = True)
+    author = models.ForeignKey(User, on_delete = models.CASCADE, related_name='posts')
+    tags = models.ManyToManyField(Tag, blank = True, related_name='posts')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL,
+                                 null=True, related_name='posts')
     thumbnail = CloudinaryField('post_thumbnail',blank=True, null=True)
 
     def __str__(self):

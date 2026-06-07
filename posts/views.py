@@ -1,15 +1,15 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Post, Comment, Like
-from .serializers import PostSerializer, CommentSerializer,RegisterSerializer, LoginSerializer
+from .models import Post, Comment, Like, Category, Tag
+from .serializers import (PostSerializer, CommentSerializer, RegisterSerializer,
+                          LoginSerializer, CategorySerializer, TagSerializer)
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 import re
 from drf_spectacular.utils import extend_schema
-
 
 
 def validate_email(email):
@@ -30,43 +30,34 @@ def validate_password(password):
     return errors
 
 
-
 class RegisterView(APIView):
-    @extend_schema(request=RegisterSerializer, responses={201:None})
+    @extend_schema(request=RegisterSerializer, responses={201: None})
     def post(self, request):
         email = request.data.get('email')
         username = request.data.get('username')
         password = request.data.get('password')
         if not email or not username or not password:
-            return Response({'error': "All fields are required"}, 
+            return Response({'error': 'All fields are required'},
                             status=status.HTTP_400_BAD_REQUEST)
-        
         if not validate_email(email):
-            return Response({'error':'Invalid email format'},
+            return Response({'error': 'Invalid email format'},
                             status=status.HTTP_400_BAD_REQUEST)
-        
         password_errors = validate_password(password)
         if password_errors:
-            return Response({'error':password_errors},
+            return Response({'error': password_errors},
                             status=status.HTTP_400_BAD_REQUEST)
-        
         if User.objects.filter(username=username).exists():
-            return Response({'error': "Username already exist"},
+            return Response({'error': 'Username already exist'},
                             status=status.HTTP_400_BAD_REQUEST)
-        
-        if User.objects.filter(email= email).exists():
-            return Response({'error':'Email already existed'},
+        if User.objects.filter(email=email).exists():
+            return Response({'error': 'Email already existed'},
                             status=status.HTTP_400_BAD_REQUEST)
-        
         user = User.objects.create_user(
-            username= username,
-            password= password,
-            email= email
-        )
+            username=username, password=password, email=email)
         refresh = RefreshToken.for_user(user)
         return Response({
-            'access':str(refresh.access_token),
-            'refresh':str(refresh)
+            'access': str(refresh.access_token),
+            'refresh': str(refresh)
         }, status=status.HTTP_201_CREATED)
 
 
@@ -79,113 +70,211 @@ class LoginView(APIView):
         if user:
             refresh = RefreshToken.for_user(user)
             return Response({
-                'access':str(refresh.access_token),
-                'refresh':str(refresh)
+                'access': str(refresh.access_token),
+                'refresh': str(refresh)
             })
-        return Response({'error':'Invalid Credentials'},
+        return Response({'error': 'Invalid Credentials'},
                         status=status.HTTP_401_UNAUTHORIZED)
 
 
-
-class PostListView(APIView):
-    @extend_schema(responses=PostSerializer)
+class CategoryListView(APIView):
     def get_permissions(self):
         if self.request.method == 'GET':
             return [AllowAny()]
         return [IsAuthenticated()]
-    
+
     def get(self, request):
-        posts = Post.objects.all()
-        serializers = PostSerializer(posts, many=True)
-        return Response(serializers.data)
+        categories = Category.objects.all()
+        serializer = CategorySerializer(categories, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = CategorySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(created_by=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CategoryDetailView(APIView):
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get(self, request, slug):
+        try:
+            category = Category.objects.get(slug=slug)
+        except Category.DoesNotExist:
+            return Response({'error': 'Category not found'},
+                            status=status.HTTP_404_NOT_FOUND)
+        posts = Post.objects.filter(category=category, status='published')
+        category_serializer = CategorySerializer(category)
+        post_serializer = PostSerializer(posts, many=True)
+        return Response({
+            'category': category_serializer.data,
+            'posts': post_serializer.data
+        })
+
+    def delete(self, request, slug):
+        try:
+            category = Category.objects.get(slug=slug)
+        except Category.DoesNotExist:
+            return Response({'error': 'Category not found'},
+                            status=status.HTTP_404_NOT_FOUND)
+        if category.created_by != request.user:
+            return Response({'error': 'You cannot delete this category'},
+                            status=status.HTTP_403_FORBIDDEN)
+        category.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TagListView(APIView):
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get(self, request):
+        tags = Tag.objects.all()
+        serializer = TagSerializer(tags, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = TagSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PostListView(APIView):
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    @extend_schema(responses=PostSerializer)
+    def get(self, request):
+        posts = Post.objects.filter(status='published')
+
+        # filter by category slug
+        category = request.query_params.get('category')
+        if category:
+            posts = posts.filter(category__slug=category)
+
+        # filter by tag slug
+        tag = request.query_params.get('tag')
+        if tag:
+            posts = posts.filter(tags__slug=tag)
+
+        # search by title or body
+        search = request.query_params.get('search')
+        if search:
+            posts = posts.filter(title__icontains=search)
+
+        serializer = PostSerializer(posts, many=True)
+        return Response(serializer.data)
 
     @extend_schema(request=PostSerializer)
     def post(self, request):
-        serializers = PostSerializer(data= request.data)
-        if serializers.is_valid():
-            serializers.save(author = request.user)
-            return Response(serializers.data, status=status.HTTP_201_CREATED)
-        return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+        serializer = PostSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(author=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class PostDetailView(APIView):
     def get_permissions(self):
         if self.request.method == 'GET':
             return [AllowAny()]
-        return[IsAuthenticated()]
+        return [IsAuthenticated()]
+
     def get_object(self, pk):
         try:
             return Post.objects.get(pk=pk)
         except Post.DoesNotExist:
             return None
-    
+
     @extend_schema(responses=PostSerializer)
     def get(self, request, pk):
         post = self.get_object(pk)
         if not post:
-            return Response({'error': 'Post not found'}, status= status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Post not found'},
+                            status=status.HTTP_404_NOT_FOUND)
         serializer = PostSerializer(post)
         return Response(serializer.data)
-    
+
     @extend_schema(request=PostSerializer)
     def put(self, request, pk):
         post = self.get_object(pk)
         if not post:
-            return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Post not found'},
+                            status=status.HTTP_404_NOT_FOUND)
         if post.author != request.user:
-            return Response({'error': 'You are not allowed to edit this post'}, status=status.HTTP_403_FORBIDDEN)
-        serializer= PostSerializer(post, data= request.data)
+            return Response({'error': 'You are not allowed to edit this post'},
+                            status=status.HTTP_403_FORBIDDEN)
+        serializer = PostSerializer(post, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @extend_schema(responses={204: None})
     def delete(self, request, pk):
         post = self.get_object(pk)
         if not post:
-            return Response({'error':'Post not found'}, status= status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Post not found'},
+                            status=status.HTTP_404_NOT_FOUND)
         if post.author != request.user:
-            return Response({'error': 'You are not allowed to delete this post'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'error': 'You are not allowed to delete this post'},
+                            status=status.HTTP_403_FORBIDDEN)
         post.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-        
+
 
 class CommentListView(APIView):
-     def get_permissions(self):
+    def get_permissions(self):
         if self.request.method == 'GET':
             return [AllowAny()]
         return [IsAuthenticated()]
-     
-     @extend_schema(responses=CommentSerializer)
-     def get(self, request, pk):
-         comments = Comment.objects.filter(post_id = pk)
-         serializers = CommentSerializer(comments, many=True)
-         return Response(serializers.data)
-     
-     @extend_schema(request=CommentSerializer)
-     def post(self, request, pk):
-         serializers =CommentSerializer(data = request.data)
-         if serializers.is_valid():
-             serializers.save(author = request.user, post_id = pk)
-             return Response(serializers.data, status= status.HTTP_201_CREATED)
-         return Response(serializers.errors, status= status.HTTP_400_BAD_REQUEST)
-     
+
+    @extend_schema(responses=CommentSerializer)
+    def get(self, request, pk):
+        comments = Comment.objects.filter(post_id=pk)
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
+
+    @extend_schema(request=CommentSerializer)
+    def post(self, request, pk):
+        serializer = CommentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(author=request.user, post_id=pk)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class CommentDetailView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get_object(self, comment_pk):
         try:
-            return Comment.objects.get(pk= comment_pk)
+            return Comment.objects.get(pk=comment_pk)
         except Comment.DoesNotExist:
             return None
+
     def delete(self, request, post_pk, comment_pk):
         comment = self.get_object(comment_pk)
         if not comment:
-            return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Comment not found'},
+                            status=status.HTTP_404_NOT_FOUND)
         if comment.author != request.user:
-            return Response({"error": "You are not allowed to delete this post"}, 
+            return Response({'error': 'You are not allowed to delete this comment'},
                             status=status.HTTP_403_FORBIDDEN)
+        comment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class LikeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -195,20 +284,24 @@ class LikeView(APIView):
         try:
             post = Post.objects.get(pk=pk)
         except Post.DoesNotExist:
-            return Response({"error": "Post not Found"}, status=status.HTTP_404_NOT_FOUND)
-        if Like.objects.filter(user= request.user, post= post).exists():
-            return Response({"error": "You already liked this post"}, status=status.HTTP_400_BAD_REQUEST)
-        Like.objects.create(user= request.user, post=post)
-        return Response({"Message": "Post Liked"}, status=status.HTTP_201_CREATED)
-    
+            return Response({'error': 'Post not found'},
+                            status=status.HTTP_404_NOT_FOUND)
+        if Like.objects.filter(user=request.user, post=post).exists():
+            return Response({'error': 'You already liked this post'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        Like.objects.create(user=request.user, post=post)
+        return Response({'message': 'Post liked'}, status=status.HTTP_201_CREATED)
+
     @extend_schema(responses={204: None})
     def delete(self, request, pk):
         try:
             post = Post.objects.get(pk=pk)
         except Post.DoesNotExist:
-            return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
-        like = Like.objects.filter(user= request.user, post=post).first()
+            return Response({'error': 'Post not found'},
+                            status=status.HTTP_404_NOT_FOUND)
+        like = Like.objects.filter(user=request.user, post=post).first()
         if not like:
-            return Response({'error': 'You have not liked this post'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'You have not liked this post'},
+                            status=status.HTTP_400_BAD_REQUEST)
         like.delete()
         return Response({'message': 'Post unliked'}, status=status.HTTP_204_NO_CONTENT)
