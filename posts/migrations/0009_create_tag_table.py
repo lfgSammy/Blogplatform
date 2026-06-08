@@ -9,7 +9,27 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.SeparateDatabaseAndState(
-            database_operations=[],  # don't touch the database
+            database_operations=[
+                migrations.RunSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS posts_tag (
+                        id bigserial PRIMARY KEY,
+                        name varchar(50) NOT NULL UNIQUE,
+                        slug varchar(50) NOT NULL UNIQUE
+                    );
+                    CREATE TABLE IF NOT EXISTS posts_post_tags (
+                        id bigserial PRIMARY KEY,
+                        post_id bigint NOT NULL REFERENCES posts_post(id),
+                        tag_id bigint NOT NULL REFERENCES posts_tag(id),
+                        UNIQUE(post_id, tag_id)
+                    );
+                    """,
+                    reverse_sql="""
+                    DROP TABLE IF EXISTS posts_post_tags;
+                    DROP TABLE IF EXISTS posts_tag;
+                    """
+                ),
+            ],
             state_operations=[
                 migrations.CreateModel(
                     name='Tag',
@@ -19,11 +39,6 @@ class Migration(migrations.Migration):
                         ('slug', models.SlugField(blank=True, unique=True)),
                     ],
                 ),
-            ]
-        ),
-        migrations.SeparateDatabaseAndState(
-            database_operations=[],  # don't touch the database
-            state_operations=[
                 migrations.AddField(
                     model_name='post',
                     name='tags',
