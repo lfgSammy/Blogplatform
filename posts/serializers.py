@@ -50,9 +50,10 @@ class PostSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many= True, read_only = True)
     class Meta:
         model = Post
-        fields = ['id','title', 'body', 'created_at', 'status',
-                   'updated_at', 'author', 'category', 'thumbnail'
+        fields = ['id','title', 'body', 'created_at', 'category_id','status',
+                   'updated_at', 'author', 'category', 'thumbnail', 'tags'
                   ]
+        read_only_fields = ['author', 'created_at', 'updated_at']
         
 class CommentSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only= True)
