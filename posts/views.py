@@ -83,11 +83,13 @@ class CategoryListView(APIView):
             return [AllowAny()]
         return [IsAuthenticated()]
 
+    @extend_schema(responses=CategorySerializer)
     def get(self, request):
         categories = Category.objects.all()
         serializer = CategorySerializer(categories, many=True)
         return Response(serializer.data)
 
+    @extend_schema(responses=CategorySerializer)
     def post(self, request):
         serializer = CategorySerializer(data=request.data)
         if serializer.is_valid():
@@ -102,6 +104,7 @@ class CategoryDetailView(APIView):
             return [AllowAny()]
         return [IsAuthenticated()]
 
+    @extend_schema(responses=CategorySerializer)
     def get(self, request, slug):
         try:
             category = Category.objects.get(slug=slug)
@@ -116,6 +119,7 @@ class CategoryDetailView(APIView):
             'posts': post_serializer.data
         })
 
+    @extend_schema(responses=CategorySerializer)
     def delete(self, request, slug):
         try:
             category = Category.objects.get(slug=slug)
@@ -135,11 +139,13 @@ class TagListView(APIView):
             return [AllowAny()]
         return [IsAuthenticated()]
 
+    @extend_schema(responses=TagSerializer)
     def get(self, request):
         tags = Tag.objects.all()
         serializer = TagSerializer(tags, many=True)
         return Response(serializer.data)
 
+    @extend_schema(responses=TagSerializer)
     def post(self, request):
         serializer = TagSerializer(data=request.data)
         if serializer.is_valid():
