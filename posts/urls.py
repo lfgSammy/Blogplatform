@@ -11,4 +11,7 @@ urlpatterns = [
     path('auth/register/', views.RegisterView.as_view(), name= 'register'),
     path('auth/login/', views.LoginView.as_view(), name= 'login'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
+    path('categories/', views.CategoryListView.as_view(), name='categories'),
+    path('categories/<slug:slug>/', views.CategoryDetailView.as_view(), name='category-list'),
+    path('tags/', views.TagListView.as_view(), name='tag'),
 ]
