@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework import serializers as drf_serializers
 from .models import Post, Comment, Like, Category, Tag
 from .serializers import (PostSerializer, CommentSerializer, RegisterSerializer,
                           LoginSerializer, CategorySerializer, TagSerializer)
@@ -9,7 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 import re
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 
 def validate_email(email):
@@ -88,8 +89,18 @@ class CategoryListView(APIView):
         categories = Category.objects.all()
         serializer = CategorySerializer(categories, many=True)
         return Response(serializer.data)
+    
+    @extend_schema(
+            request=inline_serializer(
+                name= 'CategoryCreate',
+                fields= {
+                    'name':drf_serializers.CharField(),
+                    'description':drf_serializers.CharField(required=False),
+                }
+            ),
+            responses=CategorySerializer
+    )
 
-    @extend_schema(responses=CategorySerializer)
     def post(self, request):
         serializer = CategorySerializer(data=request.data)
         if serializer.is_valid():
@@ -119,7 +130,7 @@ class CategoryDetailView(APIView):
             'posts': post_serializer.data
         })
 
-    @extend_schema(responses=CategorySerializer)
+    @extend_schema(responses={204: None})
     def delete(self, request, slug):
         try:
             category = Category.objects.get(slug=slug)
@@ -145,7 +156,15 @@ class TagListView(APIView):
         serializer = TagSerializer(tags, many=True)
         return Response(serializer.data)
 
-    @extend_schema(responses=TagSerializer)
+    @extend_schema(
+        request=inline_serializer(
+            name='TagCreate',
+            fields={
+                'name': drf_serializers.CharField(),
+            }
+        ),
+        responses=TagSerializer
+    )
     def post(self, request):
         serializer = TagSerializer(data=request.data)
         if serializer.is_valid():
