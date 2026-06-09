@@ -203,7 +203,7 @@ class PostListView(APIView):
 
     @extend_schema(request=PostSerializer)
     def post(self, request):
-        serializer = PostSerializer(data=request.data)
+        serializer = PostSerializer(data=request.data, context={'request':request})
         if serializer.is_valid():
             serializer.save(author=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -240,7 +240,7 @@ class PostDetailView(APIView):
         if post.author != request.user:
             return Response({'error': 'You are not allowed to edit this post'},
                             status=status.HTTP_403_FORBIDDEN)
-        serializer = PostSerializer(post, data=request.data)
+        serializer = PostSerializer(post, data=request.data, context={'request':request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

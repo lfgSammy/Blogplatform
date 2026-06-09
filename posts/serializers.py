@@ -43,17 +43,70 @@ class CategorySerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only= True)
     category = CategorySerializer(read_only= True)
-    category_id = serializers.PrimaryKeyRelatedField(
-        queryset= Category.objects.all(), source = 'category',
-        write_only = True, required = False
+    category_name = serializers.CharField(write_only= True, required=True, allow_blank=True)
+    tags = TagSerializer(many=True, read_only= True)
+    tag_names = serializers.ListField(
+        child= serializers.CharField(), write_only=True, required=False
     )
-    tags = TagSerializer(many= True, read_only = True)
+
     class Meta:
         model = Post
-        fields = ['id','title', 'body', 'created_at', 'category_id','status',
-                   'updated_at', 'author', 'category', 'thumbnail', 'tags'
+        fields = ['id','title', 'body', 'created_at', 'category_name','status',
+                   'updated_at', 'author', 'category', 'thumbnail', 'tags', 'tag_names'
                   ]
         read_only_fields = ['author', 'created_at', 'updated_at']
+
+    def create(self, validated_data):
+        category_name = validated_data.pop('category_name', None)
+        tag_names = validated_data.pop('tag_name', [])
+
+        if category_name:
+            category, created = Category.objects.get_or_create(
+                name__iexact = category_name,
+                defaults= {
+                    'name':category_name,
+                    'created_by': self.context['request'].user
+                }
+            )
+            validated_data['category']= category
+
+        post = super().create(validated_data)
+
+        for tag_name in  tag_names:
+            tag, created = Tag.objects.get_or_create(
+                name__iexact= tag_name,
+                defaults={'name':tag_name}
+            )
+            post.tags.add(tag)
+
+        return post
+    
+    def update(self, instance, validated_data):
+        category_name = validated_data.pop('category', None)
+        tag_names = validated_data.pop('tag_names', None)
+
+        if category_name:
+            category, created = Category.objects.get_or_create(
+                name__iexact=category_name,
+                defaults={
+                    'name':category_name,
+                    'created_by':self.context['request'].user
+                }
+            )
+            validated_data['category'] = category
+
+        post = super().update(instance, validated_data)
+        if tag_names is not None:
+            post.tags.clear()
+            for tag_name in tag_names:
+                tag, created = Tag.objects.get_or_create(
+                    name__iexact = tag_name,
+                    defaults={'name':tag_name}
+                )
+                post.tags.add(tag)
+
+        return post
+
         
 class CommentSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only= True)
