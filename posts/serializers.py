@@ -48,6 +48,13 @@ class PostSerializer(serializers.ModelSerializer):
     tag_names = serializers.ListField(
         child=serializers.CharField(), write_only=True, required=False
     )
+    
+    thumbnail = serializers.SerializerMethodField()
+    
+    def get_thumbnail(self, obj):
+        if obj.thumbnail:
+            return obj.thumbnail.url
+        return None
 
     class Meta:
         model = Post
