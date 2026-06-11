@@ -12,6 +12,7 @@ class Category(models.Model):
     created_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
+        self.name = self.name.strip().title()
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
