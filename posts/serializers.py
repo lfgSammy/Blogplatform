@@ -48,10 +48,9 @@ class PostSerializer(serializers.ModelSerializer):
     tag_names = serializers.ListField(
         child=serializers.CharField(), write_only=True, required=False
     )
-    
-    thumbnail = serializers.SerializerMethodField()
-    
-    def get_thumbnail(self, obj):
+    thumbnail_url = serializers.SerializerMethodField()
+
+    def get_thumbnail_url(self, obj):
         if obj.thumbnail:
             return obj.thumbnail.url
         return None
@@ -59,10 +58,10 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['id', 'title', 'body', 'status', 'thumbnail',
-                  'author', 'category', 'category_name',
+                  'thumbnail_url', 'author', 'category', 'category_name',
                   'tags', 'tag_names', 'created_at', 'updated_at']
-        read_only_fields = ['author', 'created_at', 'updated_at']
-
+        read_only_fields = ['author', 'created_at', 'updated_at', 'thumbnail_url']
+        
     def create(self, validated_data):
         category_name = validated_data.pop('category_name', None)
         tag_names = validated_data.pop('tag_names', [])
