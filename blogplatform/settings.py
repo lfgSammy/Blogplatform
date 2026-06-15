@@ -14,6 +14,8 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
+import cloudinary
+from decouple import config
 
 
 load_dotenv()
@@ -62,6 +64,12 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_SCHEMA_CLASS':'drf_spectacular.openapi.AutoSchema',
 }
+
+cloudinary.config(
+      cloud_name = config('dsre1e9zr'),
+      api_key = config('834771277448637'),
+      api_secret = config('FNSjS3kjzeV4Z1MALTSN6DNz1_s')
+)
 
 
 SPECTACULAR_SETTINGS = {
