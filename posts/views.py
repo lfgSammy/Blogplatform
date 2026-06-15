@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 import re
 from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework.pagination import PageNumberPagination
 
 
 def validate_email(email):
@@ -181,7 +182,7 @@ class PostListView(APIView):
 
     @extend_schema(responses=PostSerializer)
     def get(self, request):
-        posts = Post.objects.filter(status='published')
+        posts = Post.objects.filter(status='published').order_by('-id')
 
         # filter by category slug
         category = request.query_params.get('category')
@@ -198,8 +199,12 @@ class PostListView(APIView):
         if search:
             posts = posts.filter(title__icontains=search)
 
+        paginator = PageNumberPagination()
+        paginated_posts = paginator.paginate_queryset(posts, request, view=self)
+
         serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data)
+        return paginator.get_paginated_response(serializer.data)
+
 
     @extend_schema(request=PostSerializer)
     def post(self, request):
