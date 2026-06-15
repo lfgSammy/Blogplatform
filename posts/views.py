@@ -200,7 +200,13 @@ class PostListView(APIView):
             posts = posts.filter(title__icontains=search)
 
         paginator = PageNumberPagination()
+
+        paginator.page_size = 10
         paginated_posts = paginator.paginate_queryset(posts, request, view=self)
+
+        if paginated_posts is not None:
+            serializer = PostSerializer(paginated_posts, many= True)
+            return paginator.get_paginated_response(serializer.data)
 
         serializer = PostSerializer(posts, many=True)
         return paginator.get_paginated_response(serializer.data)
