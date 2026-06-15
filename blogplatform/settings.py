@@ -66,11 +66,10 @@ REST_FRAMEWORK = {
 }
 
 cloudinary.config(
-      cloud_name = config('dsre1e9zr'),
-      api_key = config('834771277448637'),
-      api_secret = config('FNSjS3kjzeV4Z1MALTSN6DNz1_s')
+    cloud_name = config('CLOUDINARY_CLOUD_NAME'),
+    api_key = config('CLOUDINARY_API_KEY'),
+    api_secret = config('CLOUDINARY_API_SECRET')
 )
-
 
 SPECTACULAR_SETTINGS = {
       'TITLE':'Blog Platform API',
