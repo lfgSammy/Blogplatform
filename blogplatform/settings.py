@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'users',
     'posts',
     'corsheaders',
+    'django_filter',
 ]
 
 REST_FRAMEWORK = {
@@ -63,6 +64,12 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_SCHEMA_CLASS':'drf_spectacular.openapi.AutoSchema',
+
+    'DEFAULT_FILTER_BACKENDS':[
+          'django_filters.rest_framework.DjangoFilterBackend',
+          'rest_framework.filters.SearchFilter',
+          'rest_framework.filters.OrderingFilter'
+    ],
 
 }
 

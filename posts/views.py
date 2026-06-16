@@ -12,6 +12,9 @@ from django.contrib.auth.models import User
 import re
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework.pagination import PageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+from .filters import PostFilter
 
 
 def validate_email(email):
@@ -190,6 +193,17 @@ class PostListView(APIView):
         ).prefetch_related(
             'tags',
         ).filter(status='published').order_by('id')
+
+        post_filter = PostFilter(request.GET, queryset=posts)
+        posts = post_filter.qs
+
+        ordering = request.query_params.get('ordering')
+        if ordering in['created_at', '-created_at', 'title', '-title']:
+            posts = posts.order_by(ordering)
+
+            serializer = PostSerializer(posts, many=True)
+            return Response(serializer.data)
+
         # filter by category slug
         category = request.query_params.get('category')
         if category:
