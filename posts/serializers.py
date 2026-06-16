@@ -20,6 +20,20 @@ class TagSerializer(serializers.ModelSerializer):
 
     def get_post_count(self, obj):
         return obj.posts.filter(status='published').count()
+    
+    def validate_name(self, value):
+        value = value.strip().title()
+
+        if len(value)> 5:
+            raise serializers.ValidationError(
+                'A post cannot have more than 5 tags'
+            )
+
+        if Tag.objects.filter(name__iexact = value).exists():
+            raise serializers.ValidationError(
+                f'Tag{value} already exist'
+            )
+        return value
 
     class Meta:
         model = Tag
