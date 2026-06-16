@@ -182,8 +182,14 @@ class PostListView(APIView):
 
     @extend_schema(responses=PostSerializer)
     def get(self, request):
-        posts = Post.objects.filter(status='published').order_by('-id')
-
+        posts = Post.objects.select_related(
+            'author',
+            'author__profile',
+            'category',
+            'category__created_by'
+        ).prefetch_related(
+            'tags',
+        ).filter(status='published').order_by('id')
         # filter by category slug
         category = request.query_params.get('category')
         if category:
@@ -229,7 +235,16 @@ class PostDetailView(APIView):
 
     def get_object(self, pk):
         try:
-            return Post.objects.get(pk=pk)
+            return Post.objects.select_related(
+                'author',
+                'author__profile',
+                'category',
+                'category__created_by'
+            ).prefetch_related(
+                'tags',
+                'comment__author',
+                'comment__author__profile',
+            ).get(pk=pk)
         except Post.DoesNotExist:
             return None
 
