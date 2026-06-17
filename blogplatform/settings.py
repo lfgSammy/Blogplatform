@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     'users',
     'posts',
     'corsheaders',
-    'django_filter',
+    'django_filters',
 ]
 
 REST_FRAMEWORK = {
