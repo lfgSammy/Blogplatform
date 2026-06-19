@@ -256,8 +256,8 @@ class PostDetailView(APIView):
                 'category__created_by'
             ).prefetch_related(
                 'tags',
-                'comment__author',
-                'comment__author__profile',
+                'comments__author',
+                'comments__author__profile',
             ).get(pk=pk)
         except Post.DoesNotExist:
             return None
