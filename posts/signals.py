@@ -19,17 +19,17 @@ def send_welcome_email(sender,instance,created,**kwargs):
         send_mail(
             subject='Welcome to Day2Day!',
             message=f'''
-            Hi {instance.username},
-            Welcome to Day2Day! Your account has been created successfully.
+Hi {instance.username},
+Welcome to Day2Day! Your account has been created successfully.
 
-            You can now:
-                - Write and publish blog posts
-                - Comment and reply on other people's post
-                - Like posts you enjoy
+You can now:
+- Write and publish blog posts
+- Comment and reply on other people's post
+- Like posts you enjoy
 
-            Happy Blogging!!!
+Happy Blogging!!!
 
-            Day2Day Team.
+Day2Day Team.
             ''',
 
             from_email=settings.DEFAULT_FROM_EMAIL,
