@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     'posts',
     'corsheaders',
     'django_filters',
-    'anymail'
+    'anymail',
+    'django_celery_results',
 ]
 
 EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
@@ -69,9 +70,6 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = config('EMAIL_HOST_USER')
 
 
-# ANYMAIL = {
-#       "RESEND_API_KEY": config('RESEND_API_KEY')
-# }
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES':[
@@ -93,9 +91,15 @@ cloudinary.config(
     api_secret = config('CLOUDINARY_API_SECRET')
 )
 
+CELERY_BROKER_URL= config('REDIS_URL')
+CELERY_RESULT_BACKEND = config('REDIS_URL')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
 SPECTACULAR_SETTINGS = {
-      'TITLE':'Blog Platform API',
-      'DESCRIPTION':'A REST API for a blog platform',
+      'TITLE':'Day2Day Blog',
+      'DESCRIPTION':'A Blog platform with the sauce',
       'VERSION':'1.0'
 }
 
