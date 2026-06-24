@@ -85,6 +85,8 @@ REST_FRAMEWORK = {
 
 }
 
+REDIS_URL = config('REDIS_URL', default=None)
+
 cloudinary.config(
     cloud_name = config('CLOUDINARY_CLOUD_NAME'),
     api_key = config('CLOUDINARY_API_KEY'),
