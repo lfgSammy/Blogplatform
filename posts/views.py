@@ -11,7 +11,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 import re
 from drf_spectacular.utils import extend_schema, inline_serializer
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import CursorPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .filters import PostFilter
@@ -192,7 +192,7 @@ class PostListView(APIView):
             'category__created_by'
         ).prefetch_related(
             'tags',
-        ).filter(status='published').order_by('id')
+        ).filter(status='published')
 
         post_filter = PostFilter(request.GET, queryset=posts)
         posts = post_filter.qs
@@ -219,9 +219,9 @@ class PostListView(APIView):
         if search:
             posts = posts.filter(title__icontains=search)
 
-        paginator = PageNumberPagination()
-
+        paginator = CursorPagination()
         paginator.page_size = 10
+        paginator.ordering = '-created_at'
         paginated_posts = paginator.paginate_queryset(posts, request, view=self)
 
         if paginated_posts is not None:
@@ -229,8 +229,7 @@ class PostListView(APIView):
             return paginator.get_paginated_response(serializer.data)
 
         serializer = PostSerializer(posts, many=True)
-        return paginator.get_paginated_response(serializer.data)
-
+        return Response(serializer.data)
 
     @extend_schema(request=PostSerializer)
     def post(self, request):
