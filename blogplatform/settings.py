@@ -85,16 +85,14 @@ REST_FRAMEWORK = {
 
 }
 
-REDIS_URL = config('REDIS_URL', default=None)
-
 cloudinary.config(
     cloud_name = config('CLOUDINARY_CLOUD_NAME'),
     api_key = config('CLOUDINARY_API_KEY'),
     api_secret = config('CLOUDINARY_API_SECRET')
 )
 
-CELERY_BROKER_URL= config('REDIS_URL')
-CELERY_RESULT_BACKEND = config('REDIS_URL')
+CELERY_BROKER_URL= config('REDIS_URL', default=None)
+CELERY_RESULT_BACKEND = config('REDIS_URL', default=None)
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
