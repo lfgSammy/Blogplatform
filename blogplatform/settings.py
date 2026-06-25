@@ -91,8 +91,8 @@ cloudinary.config(
     api_secret = config('CLOUDINARY_API_SECRET')
 )
 
-CELERY_BROKER_URL= config('REDIS_URL', default=None)
-CELERY_RESULT_BACKEND = config('REDIS_URL', default=None)
+CELERY_BROKER_URL= config('REDIS_URL')
+CELERY_RESULT_BACKEND = config('REDIS_URL')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
