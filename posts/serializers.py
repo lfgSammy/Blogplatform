@@ -57,10 +57,16 @@ class CategorySerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
-    category_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    category_name = serializers.CharField(
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
     tags = TagSerializer(many=True, read_only=True)
     tag_names = serializers.ListField(
-        child=serializers.CharField(), write_only=True, required=False
+        child=serializers.CharField(),
+        write_only=True,
+        required=False
     )
     thumbnail_url = serializers.SerializerMethodField()
 
@@ -69,35 +75,57 @@ class PostSerializer(serializers.ModelSerializer):
             return obj.thumbnail.url
         return None
 
+    def validate_tag_names(self, value):
+        if len(value) > 5:
+            raise serializers.ValidationError(
+                "A post cannot have more than 5 tags."
+            )
+
+        normalized_tags = [
+            tag.lower().strip()
+            for tag in value
+        ]
+
+        if len(normalized_tags) != len(set(normalized_tags)):
+            raise serializers.ValidationError(
+                "Duplicate tags are not allowed."
+            )
+
+        return value
+
     class Meta:
         model = Post
-        fields = ['id', 'title', 'body', 'status', 'thumbnail',
-                  'thumbnail_url', 'author', 'category', 'category_name',
-                  'tags', 'tag_names', 'created_at', 'updated_at']
-        read_only_fields = ['author', 'created_at', 'updated_at', 'thumbnail_url']
+        fields = ['id','title','body','status','thumbnail','thumbnail_url','author',
+            'category','category_name','tags','tag_names','created_at','updated_at',
+        ]
+        read_only_fields = ['author','created_at','updated_at','thumbnail_url']
+
+
     def create(self, validated_data):
         category_name = validated_data.pop('category_name', None)
         tag_names = validated_data.pop('tag_names', [])
 
-        # get or create category
+        # Get or create category
         if category_name:
             category, created = Category.objects.get_or_create(
                 name__iexact=category_name,
                 defaults={
                     'name': category_name,
-                    'created_by': self.context['request'].user
+                    'created_by': self.context['request'].user,
                 }
             )
             validated_data['category'] = category
 
-        # create the post
+        # Create post
         post = super().create(validated_data)
 
-        # get or create tags and add to post
+        # Get or create tags and add to post
         for tag_name in tag_names:
             tag, created = Tag.objects.get_or_create(
                 name__iexact=tag_name,
-                defaults={'name': tag_name}
+                defaults={
+                    'name': tag_name,
+                }
             )
             post.tags.add(tag)
 
@@ -107,27 +135,30 @@ class PostSerializer(serializers.ModelSerializer):
         category_name = validated_data.pop('category_name', None)
         tag_names = validated_data.pop('tag_names', None)
 
-        # update category
+        # Update category
         if category_name:
             category, created = Category.objects.get_or_create(
                 name__iexact=category_name,
                 defaults={
                     'name': category_name,
-                    'created_by': self.context['request'].user
+                    'created_by': self.context['request'].user,
                 }
             )
             validated_data['category'] = category
 
-        # update post
+        # Update post
         post = super().update(instance, validated_data)
 
-        # update tags if provided
+        # Update tags if provided
         if tag_names is not None:
             post.tags.clear()
+
             for tag_name in tag_names:
                 tag, created = Tag.objects.get_or_create(
                     name__iexact=tag_name,
-                    defaults={'name': tag_name}
+                    defaults={
+                        'name': tag_name,
+                    }
                 )
                 post.tags.add(tag)
 
