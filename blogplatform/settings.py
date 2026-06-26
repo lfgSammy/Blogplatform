@@ -85,6 +85,18 @@ REST_FRAMEWORK = {
 
 }
 
+CACHES = {
+      'default':{
+            'BACKEND':'django_redis.cache.RedisCache',
+            'LOCATION':config('REDIS_URL'),
+            'OPTIONS':{
+                  'CLIENT_CLASS':'django_redis.client.DefaultClient',
+            },
+            'TIMEOUT':600,
+      }
+}
+
+
 cloudinary.config(
     cloud_name = config('CLOUDINARY_CLOUD_NAME'),
     api_key = config('CLOUDINARY_API_KEY'),

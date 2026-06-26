@@ -15,6 +15,8 @@ from rest_framework.pagination import CursorPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .filters import PostFilter
+from django.core.cache import cache
+from .filters import PostFilter
 
 
 def validate_email(email):
@@ -185,6 +187,12 @@ class PostListView(APIView):
 
     @extend_schema(responses=PostSerializer)
     def get(self, request):
+
+        cache_key = f"posts_list_{request.get.urlencode()}"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+
         posts = Post.objects.select_related(
             'author',
             'author__profile',
@@ -236,6 +244,7 @@ class PostListView(APIView):
         serializer = PostSerializer(data=request.data, context={'request':request})
         if serializer.is_valid():
             serializer.save(author=request.user)
+            cache.delete_pattern('posts_list_*')
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -282,6 +291,7 @@ class PostDetailView(APIView):
         serializer = PostSerializer(post, data=request.data, context={'request':request})
         if serializer.is_valid():
             serializer.save()
+            cache.delete_pattern('posts_list_*')
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -295,6 +305,7 @@ class PostDetailView(APIView):
             return Response({'error': 'You are not allowed to delete this post'},
                             status=status.HTTP_403_FORBIDDEN)
         post.delete()
+        cache.delete_pattern('posts_list_*')
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
