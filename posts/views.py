@@ -191,7 +191,9 @@ class PostListView(APIView):
         cache_key = f"posts_list_{request.get.urlencode()}"
         cached_data = cache.get(cache_key)
         if cached_data:
+            print('CACHE HIT')
             return Response(cached_data)
+        print('CACHE MISSED')
 
         posts = Post.objects.select_related(
             'author',
