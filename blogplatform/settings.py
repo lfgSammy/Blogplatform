@@ -85,27 +85,6 @@ REST_FRAMEWORK = {
 
 }
 
-CACHES = {
-    'default': {
-        'BACKEND': config(
-            'CACHE_BACKEND',
-            default='django.core.cache.backends.locmem.LocMemCache'
-        ),
-    }
-}
-
-REDIS_URL = config('REDIS_URL', default=None)
-if REDIS_URL:
-    CACHES = {
-        'default': {
-            'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': REDIS_URL,
-            'OPTIONS': {
-                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            },
-            'TIMEOUT': 300,
-        }
-    }
 
 
 cloudinary.config(

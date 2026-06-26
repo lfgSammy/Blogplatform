@@ -187,14 +187,6 @@ class PostListView(APIView):
 
     @extend_schema(responses=PostSerializer)
     def get(self, request):
-
-        cache_key = f"posts_list_{request.get.urlencode()}"
-        cached_data = cache.get(cache_key)
-        if cached_data:
-            print('CACHE HIT')
-            return Response(cached_data)
-        print('CACHE MISSED')
-
         posts = Post.objects.select_related(
             'author',
             'author__profile',
@@ -293,7 +285,6 @@ class PostDetailView(APIView):
         serializer = PostSerializer(post, data=request.data, context={'request':request})
         if serializer.is_valid():
             serializer.save()
-            cache.delete_pattern('posts_list_*')
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -307,7 +298,6 @@ class PostDetailView(APIView):
             return Response({'error': 'You are not allowed to delete this post'},
                             status=status.HTTP_403_FORBIDDEN)
         post.delete()
-        cache.delete_pattern('posts_list_*')
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
