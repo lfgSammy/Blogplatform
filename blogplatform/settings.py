@@ -85,7 +85,7 @@ REST_FRAMEWORK = {
 
 }
 
-
+RATELIMIT_EXCEPTION_HANDLER = 'posts.views.ratelimit_error_handler'
 
 cloudinary.config(
     cloud_name = config('CLOUDINARY_CLOUD_NAME'),
