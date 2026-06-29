@@ -25,6 +25,7 @@ def ratelimit_error_handler(request,exception):
         {'error':'Too many requests, slow down!'}, status=429
     )
 
+
 def validate_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email)
@@ -44,8 +45,9 @@ def validate_password(password):
 
 
 class RegisterView(APIView):
-    @extend_schema(request=RegisterSerializer, responses={201: None})
     @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    @extend_schema(request=RegisterSerializer, responses={201: None})
+
     def post(self, request):
         email = request.data.get('email')
         username = request.data.get('username')
