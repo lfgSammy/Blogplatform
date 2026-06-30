@@ -38,6 +38,7 @@ jobs:
       CLOUDINARY_API_SECRET: test
       EMAIL_HOST_USER: test@test.com
       EMAIL_HOST_PASSWORD: testpassword
+      REDIS_URL: redis://localhost:6379/0
 
     steps:
     - uses: actions/checkout@v3
