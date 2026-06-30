@@ -38,8 +38,7 @@ jobs:
       CLOUDINARY_API_SECRET: test
       EMAIL_HOST_USER: test@test.com
       EMAIL_HOST_PASSWORD: testpassword
-      REDIS_URL: redis://localhost:6379/0
-
+      REDIS_URL: redis://default:0FkA1nwBH6gwQAqs3iszlg7pUA9oJOeD@side-hazel-sleet-90218.db.redis.io:15091
     steps:
     - uses: actions/checkout@v3
 
