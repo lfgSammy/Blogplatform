@@ -3,8 +3,8 @@
 A production-ready REST API for a blog platform built with Django and Django REST Framework.
 
 ## Live Demo
-- API: (https://blogplatform-production-d602.up.railway.app/api)
-- Swagger Docs: (https://blogplatform-production-d602.up.railway.app/api/docs/#/)
+- API: https://blogplatform-production-d602.up.railway.app/api
+- Swagger Docs: https://blogplatform-production-d602.up.railway.app/api/docs/
 
 ## Features
 - JWT authentication
