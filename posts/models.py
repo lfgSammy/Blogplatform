@@ -38,7 +38,7 @@ class Post(models.Model):
     STATUS_CHOICES = [
         ("draft", "Draft"),
         ("published", "Published"),
-        ("archived", ""),
+        ("archived", "Archived"),
     ]
     title = models.CharField(max_length = 200)
     body = models.TextField()
