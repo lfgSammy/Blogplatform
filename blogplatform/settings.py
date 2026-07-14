@@ -35,7 +35,7 @@ DEBUG = True
 
 
 CSRF_TRUSTED_ORIGINS = [
-      'https://blogplatform-production-d602.up.railway.app'
+      'https://blogplatform-4zge.onrender.com/'
 ]
 
 ALLOWED_HOSTS = ['*']
